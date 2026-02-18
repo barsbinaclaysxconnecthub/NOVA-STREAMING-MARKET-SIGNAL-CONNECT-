@@ -1,0 +1,78 @@
+:root {
+  --primary: #1e90ff;
+  --bg-dark: #0f172a;
+  --card-dark: #1e293b;
+  --text-dark: #f1f5f9;
+
+  --bg-light: #f1f5f9;
+  --card-light: #ffffff;
+  --text-light: #0f172a;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  transition: 0.3s ease;
+}
+
+body.dark {
+  background: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+body.light {
+  background: var(--bg-light);
+  color: var(--text-light);
+}
+
+.card {
+  padding: 20px;
+  margin: 15px;
+  border-radius: 12px;
+}
+
+.dark .card {
+  background: var(--card-dark);
+}
+
+.light .card {
+  background: var(--card-light);
+}
+
+button {
+  background: var(--primary);
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: none;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+}
+
+.blink-green {
+  color: #00ff88;
+  animation: blink 0.5s infinite alternate;
+}
+
+.blink-red {
+  color: #ff4d4d;
+  animation: blink 0.5s infinite alternate;
+}
+
+@keyframes blink {
+  from { opacity: 1; }
+  to { opacity: 0.5; }
+}
