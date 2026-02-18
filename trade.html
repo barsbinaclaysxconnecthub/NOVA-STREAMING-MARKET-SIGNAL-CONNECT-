@@ -33,6 +33,26 @@
 <button onclick="holdContinue()">Hold / Continue</button>
 </div>
 
+<!-- ------------------------ -->
+<!-- Animated Signal + Chart -->
+<!-- ------------------------ -->
+<div class="card signal">
+  <div class="signal-top">
+    <div>
+      <h2 id="signalText">Signal: BUY</h2>
+      <small id="signalDesc">Trend confirmed • Strong momentum</small>
+    </div>
+    <div class="price">
+      <div class="p" id="signalPrice">50000</div>
+      <div class="chg up" id="signalChange">+0.00%</div>
+    </div>
+  </div>
+</div>
+
+<div class="card chartWrap">
+  <canvas id="chart"></canvas>
+</div>
+
 <div class="card">
 <h3>Deposit (Simulation)</h3>
 <input type="number" id="depositAmount" placeholder="Enter amount">
@@ -111,7 +131,126 @@ function loadHistory(){
  });
 }
 loadHistory();
+
+/* ------------------------ */
+/* Signal + Animated Chart */
+/* ------------------------ */
+const canvas = document.getElementById("chart");
+const ctx = canvas.getContext("2d");
+canvas.width = canvas.offsetWidth;
+canvas.height = 320;
+
+let data = [];
+const MAX_POINTS = 50;
+let price = 50000; // starting price
+
+function generateNextPrice() {
+  const change = (Math.random() - 0.5) * 100; // small random fluctuation
+  price = Math.max(100, price + change);
+  data.push(price);
+  if(data.length > MAX_POINTS) data.shift();
+}
+
+function drawChart() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.beginPath();
+  ctx.strokeStyle = "#f0b90b";
+  ctx.lineWidth = 2;
+  const minPrice = Math.min(...data);
+  const maxPrice = Math.max(...data);
+  for(let i=0;i<data.length;i++){
+    const x = (canvas.width/MAX_POINTS)*i;
+    const y = canvas.height - ((data[i]-minPrice)/(maxPrice-minPrice||1) * canvas.height);
+    if(i===0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+}
+
+function updateSignal() {
+  if(data.length < 2) return;
+  const change = data[data.length-1] - data[data.length-2];
+  const signalText = document.getElementById("signalText");
+  const signalChange = document.getElementById("signalChange");
+  const signalPrice = document.getElementById("signalPrice");
+
+  signalPrice.textContent = Math.round(price);
+
+  if(change > 0){
+    signalText.textContent = "Signal: BUY";
+    signalChange.textContent = "+" + change.toFixed(2);
+    signalChange.className = "chg up";
+  } else {
+    signalText.textContent = "Signal: SELL";
+    signalChange.textContent = change.toFixed(2);
+    signalChange.className = "chg down";
+  }
+}
+
+function animate() {
+  generateNextPrice();
+  drawChart();
+  updateSignal();
+  requestAnimationFrame(()=>setTimeout(animate, 500)); // slow animation
+}
+
+animate();
 </script>
+
+<style>
+/* ------------------------ */
+/* Signal + Animated Chart Styles */
+.signal{
+  margin:14px 0;
+  background:#101722;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 10px 40px rgba(0,0,0,.35);
+}
+.signal-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+}
+.signal h2{
+  font-size:15px;
+  margin-bottom:4px;
+}
+.signal small{
+  color:#9aa4b2;
+  font-size:12px;
+}
+.price{
+  text-align:right;
+}
+.price .p{
+  font-size:18px;
+  font-weight:800;
+}
+.price .chg{
+  font-size:12px;
+  font-weight:700;
+  margin-top:3px;
+}
+.chg.up{color:#00c087;}
+.chg.down{color:#f6465d;}
+
+.chartWrap{
+  margin:14px 0;
+  background:#0f141b;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 10px 40px rgba(0,0,0,.35);
+}
+canvas{
+  width:100%;
+  height:320px;
+  display:block;
+}
+</style>
 
 </body>
 </html>
