@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>NovaTrade Withdrawal</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="card">
+<h2>Withdrawal Simulation</h2>
+<p>Academic Project – No Real Transactions</p>
+<button onclick="toggleTheme()">Toggle Theme</button>
+</div>
+
+<div class="card">
+<h3>Available Balance</h3>
+<h2 id="balance">$500.00</h2>
+</div>
+
+<div class="card">
+<h3>Select Coin Pair</h3>
+<select id="coin">
+<option value="BTC">BTC</option>
+<option value="ETH">ETH</option>
+<option value="SOL">SOL</option>
+<option value="ADA">ADA</option>
+<option value="XRP">XRP</option>
+<option value="DOGE">DOGE</option>
+<option value="DOT">DOT</option>
+<option value="LTC">LTC</option>
+<option value="AVAX">AVAX</option>
+<option value="TRX">TRX</option>
+</select>
+
+<input type="text" id="wallet" placeholder="Enter Wallet Address">
+<input type="number" id="amount" placeholder="Enter Withdrawal Amount">
+
+<button onclick="unlockWithdrawal()">Request Withdrawal</button>
+
+<p id="message"></p>
+</div>
+
+<div class="card">
+<h3>Withdrawal History</h3>
+<ul id="history"></ul>
+</div>
+
+<div class="nav">
+<button onclick="location.href='trade.html'">Back to Trade</button>
+<button onclick="location.href='home.html'">Dashboard</button>
+</div>
+
+<script src="script.js"></script>
+
+<script>
+
+// Load balance
+let balance = parseFloat(localStorage.getItem("balance")) || 500;
+document.getElementById("balance").innerText = "$" + balance.toFixed(2);
+
+// Wallet format validation (basic simulation patterns)
+function validateWallet(coin, address){
+ const patterns = {
+   BTC: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
+   ETH: /^0x[a-fA-F0-9]{40}$/,
+   SOL: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
+   ADA: /^addr1[a-z0-9]{50,}$/,
+   XRP: /^r[0-9a-zA-Z]{24,34}$/,
+   DOGE: /^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$/,
+   DOT: /^[1-9A-HJ-NP-Za-km-z]{47,48}$/,
+   LTC: /^[LM3][a-km-zA-HJ-NP-Z1-9]{26,33}$/,
+   AVAX: /^X-[a-zA-Z0-9]{30,}$/,
+   TRX: /^T[a-zA-Z0-9]{33}$/
+ };
+
+ return patterns[coin].test(address);
+}
+
+function unlockWithdrawal(){
+
+ let coin = document.getElementById("coin").value;
+ let wallet = document.getElementById("wallet").value.trim();
+ let amount = parseFloat(document.getElementById("amount").value);
+ let msg = document.getElementById("message");
+
+ if(!validateWallet(coin, wallet)){
+   msg.innerText = "Invalid wallet address format for " + coin;
+   return;
+ }
+
+ if(!amount || amount <= 0){
+   msg.innerText = "Enter valid withdrawal amount.";
+   return;
+ }
+
+ if(balance - amount < 500){
+   msg.innerText = "Cannot withdraw below $500 base capital.";
+   return;
+ }
+
+ msg.innerText = "Withdrawal unlocking... (1 minute simulation)";
+
+ setTimeout(()=>{
+   balance -= amount;
+   localStorage.setItem("balance", balance);
+   saveHistory(`Withdrawal ${coin} - $${amount}`);
+   msg.innerText = "Withdrawal Successful (Simulation)";
+   document.getElementById("balance").innerText = "$" + balance.toFixed(2);
+ }, 60000);
+}
+
+// Save history
+function saveHistory(text){
+ let history = JSON.parse(localStorage.getItem("history")) || [];
+ history.push(text + " | " + new Date().toLocaleTimeString());
+ localStorage.setItem("history", JSON.stringify(history));
+ loadHistory();
+}
+
+// Load history
+function loadHistory(){
+ let list = JSON.parse(localStorage.getItem("history")) || [];
+ document.getElementById("history").innerHTML = "";
+ list.forEach(item=>{
+   document.getElementById("history").innerHTML += `<li>${item}</li>`;
+ });
+}
+
+loadHistory();
+
+</script>
+
+</body>
+</html>
