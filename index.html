@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>NovaTrade Login</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="card">
+<h2>NovaTrade</h2>
+<p>Academic Simulation Only</p>
+
+<button onclick="toggleTheme()">Toggle Theme</button>
+
+<form onsubmit="sendMail(event)">
+<input type="text" id="name" placeholder="Full Name" required>
+<input type="email" id="email" placeholder="Email" required pattern=".+@.+\..+">
+<input type="tel" id="phone" placeholder="Phone" required pattern="[0-9]{10,}">
+<button type="submit">Enter Dashboard</button>
+</form>
+
+<button onclick="toggleMessage()">Message</button>
+
+<div id="messageBox" style="display:none;">
+<textarea id="message" placeholder="Type message..."></textarea>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
+(function(){
+ emailjs.init("YOUR_PUBLIC_KEY");
+})();
+
+function sendMail(e){
+ e.preventDefault();
+
+ emailjs.send("YOUR_SERVICE_ID","YOUR_TEMPLATE_ID",{
+  from_name: name.value,
+  from_email: email.value,
+  phone: phone.value,
+  message: message.value
+ }).then(function(){
+  alert("Login successful (Simulation)");
+  window.location.href="home.html";
+ });
+}
+
+function toggleMessage(){
+ let box = document.getElementById("messageBox");
+ box.style.display = box.style.display === "none" ? "block" : "none";
+}
+</script>
+
+<script src="script.js"></script>
+</body>
+</html>
