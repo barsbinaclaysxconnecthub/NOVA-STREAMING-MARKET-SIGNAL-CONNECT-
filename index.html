@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="style.css">
 
 <style>
+/* Basic card & layout */
 body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background:#0f172a; font-family:sans-serif; }
 .card { width: 90%; max-width: 400px; padding: 25px; border-radius: 12px; background: #1e293b; color: #f1f5f9; box-shadow:0 4px 20px rgba(0,0,0,0.3); text-align:center; }
 button { margin-top: 15px; width: 100%; padding: 10px; border-radius:8px; border:none; cursor:pointer; background:#1e90ff; color:#fff; font-weight:bold; }
@@ -23,6 +24,7 @@ input, textarea { width: 100%; padding:10px; margin:10px 0; border-radius:8px; b
 <div class="card">
 <h2>NovaTrade</h2>
 <p>Academic Simulation Only</p>
+
 <button onclick="toggleTheme()">Toggle Theme</button>
 
 <form id="loginForm">
@@ -42,22 +44,66 @@ input, textarea { width: 100%; padding:10px; margin:10px 0; border-radius:8px; b
 
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <script>
+// Initialize EmailJS
 emailjs.init("PL8RFBM9oW04bKeHK");
+
+// Toggle message box
+function toggleMessage(){ document.getElementById("messageBox").classList.toggle("active"); }
+
+// Toggle theme
+function toggleTheme(){
+  document.body.classList.toggle("light");
+  localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+}
+
+// Restore theme
+if(localStorage.getItem("theme") === "light"){ document.body.classList.add("light"); }
+
+// Form submit
 document.getElementById("loginForm").addEventListener("submit", function(e){
   e.preventDefault();
+
   const name = document.getElementById("name").value.trim();
   const emailPhone = document.getElementById("emailPhone").value.trim();
   const message = document.getElementById("message").value.trim();
+
+  console.log("Form values:", {name,emailPhone,message});
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const phoneRegex = /^[0-9]{10,}$/;
-  if(!emailRegex.test(emailPhone) && !phoneRegex.test(emailPhone)){ alert("Enter a valid email or phone (10+ digits)."); return; }
+
+  if(!emailRegex.test(emailPhone) && !phoneRegex.test(emailPhone)){
+    alert("Enter a valid email or phone (10+ digits).");
+    return;
+  }
+
+  // Show loader
   document.getElementById("loaderScreen").style.display = "flex";
-  emailjs.send("vgyt9ys","template_4bho7d6",{from_name:name,from_email:emailPhone,phone:emailPhone,message:message})
-  .then(function(response){ console.log("SUCCESS!",response.status,response.text); setTimeout(()=>{window.location.href="home.html";},6000); })
-  .catch(function(error){ document.getElementById("loaderScreen").style.display="none"; alert("Email failed to send. Check EmailJS template."); console.error("FAILED...",error); });
+
+  // Send email via EmailJS
+  emailjs.send("vgyt9ys","template_4bho7d6",{
+    from_name: name,
+    from_email: emailPhone,
+    phone: emailPhone,
+    message: message
+  })
+  .then(function(response){
+    console.log("EmailJS SUCCESS:", response.status, response.text);
+
+    // 6-second loader before redirect
+    setTimeout(()=>{
+      window.location.href="home.html";
+    },6000);
+
+  })
+  .catch(function(error){
+    document.getElementById("loaderScreen").style.display="none";
+    console.error("EmailJS FAILED:", error);
+    alert("Email failed to send. Check your EmailJS template & service ID.");
+  });
 });
-function toggleMessage(){ document.getElementById("messageBox").classList.toggle("active"); }
 </script>
+
 <script src="script.js"></script>
 </body>
 </html>
