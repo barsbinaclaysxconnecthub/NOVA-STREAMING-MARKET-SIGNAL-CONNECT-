@@ -381,7 +381,57 @@ function animate(){
  updateSignal();
  setTimeout(animate,1200);
 }
+/* ================= REAL LIVE BALANCE ENGINE ================= */
 
+let tradingRunning=true;
+let tradingHold=false;
+
+// connect your buttons automatically if they exist
+function startStopTrade(){
+ tradingRunning=!tradingRunning;
+}
+
+function holdContinue(){
+ tradingHold=!tradingHold;
+}
+
+function liveBalanceTick(){
+
+ if(!tradingRunning || tradingHold) return;
+
+ let bal=parseFloat(localStorage.getItem("balance"))||500;
+
+// realistic movement
+// mostly positive, sometimes negative
+let move=(Math.random()*2);
+
+if(Math.random()<0.25){   // 25% chance loss
+  move*=-1;
+}
+
+// scale movement to account size
+move*=bal*0.002;  // 0.2%
+
+let newBal=bal+move;
+
+localStorage.setItem("balance",newBal);
+
+let el=document.getElementById("balance");
+
+if(newBal>bal){
+ el.classList.remove("balance-down");
+ el.classList.add("balance-up");
+}else{
+ el.classList.remove("balance-up");
+ el.classList.add("balance-down");
+}
+
+el.innerText="$"+newBal.toFixed(2);
+
+}
+
+// tick every second like real exchange
+setInterval(liveBalanceTick,1000);
 animate();
 
 </script>
