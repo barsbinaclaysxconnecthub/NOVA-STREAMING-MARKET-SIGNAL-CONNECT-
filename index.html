@@ -1,9 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NovaTrade Login</title>
 <link rel="stylesheet" href="style.css">
+
+<style>
+.loader-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #0f172a;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: white;
+  z-index: 9999;
+}
+
+.spinner {
+  border: 5px solid #1e293b;
+  border-top: 5px solid #1e90ff;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#messageBox {
+  max-height: 0;
+  overflow: hidden;
+  transition: 0.4s ease;
+}
+
+#messageBox.active {
+  max-height: 150px;
+  margin-top: 10px;
+}
+</style>
 </head>
+
 <body>
 
 <div class="card">
@@ -12,47 +57,96 @@
 
 <button onclick="toggleTheme()">Toggle Theme</button>
 
-<form onsubmit="sendMail(event)">
+<form id="loginForm">
+
 <input type="text" id="name" placeholder="Full Name" required>
-<input type="email" id="email" placeholder="Email" required pattern=".+@.+\..+">
-<input type="tel" id="phone" placeholder="Phone" required pattern="[0-9]{10,}">
+
+<input type="email" id="email" placeholder="Email"
+pattern="^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$" required>
+
+<input type="tel" id="phone" placeholder="Phone (min 10 digits)"
+pattern="[0-9]{10,}" required>
+
 <button type="submit">Enter Dashboard</button>
+
 </form>
 
 <button onclick="toggleMessage()">Message</button>
 
-<div id="messageBox" style="display:none;">
+<div id="messageBox">
 <textarea id="message" placeholder="Type message..."></textarea>
 </div>
 
 </div>
 
+<!-- Fullscreen Loader -->
+<div class="loader-screen" id="loaderScreen">
+  <div class="spinner"></div>
+  <p>Verifying Details...</p>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
 <script>
-(function(){
- emailjs.init("YOUR_PUBLIC_KEY");
-})();
 
-function sendMail(e){
- e.preventDefault();
+// Initialize EmailJS
+emailjs.init("PL8RFBM9oW04bKeHK");
 
- emailjs.send("vgyt9ys","PL8RFBM9oW04bKeHK",{
-  from_name: name.value,
-  from_email: email.value,
-  phone: phone.value,
-  message: message.value
- }).then(function(){
-  alert("Login successful (Simulation)");
-  window.location.href="home.html";
- });
-}
+document.getElementById("loginForm").addEventListener("submit", function(e){
+  e.preventDefault();
+
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const message = document.getElementById("message").value.trim();
+
+  // Validation
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    alert("Invalid email format");
+    return;
+  }
+
+  if(!/^[0-9]{10,}$/.test(phone)){
+    alert("Phone must contain at least 10 digits.");
+    return;
+  }
+
+  document.getElementById("loaderScreen").style.display = "flex";
+
+  emailjs.send("vgyt9ys", "template_4bho7d6", {
+      from_name: name,
+      from_email: email,
+      phone: phone,
+      message: message
+  })
+  .then(function(response) {
+
+      console.log("SUCCESS!", response.status, response.text);
+
+      // 6 second loading animation
+      setTimeout(function(){
+          window.location.href = "home.html";
+      }, 6000);
+
+  })
+  .catch(function(error) {
+
+      document.getElementById("loaderScreen").style.display = "none";
+
+      alert("Email failed to send. Please check EmailJS template configuration.");
+      console.error("FAILED...", error);
+
+  });
+
+});
 
 function toggleMessage(){
- let box = document.getElementById("messageBox");
- box.style.display = box.style.display === "none" ? "block" : "none";
+  document.getElementById("messageBox").classList.toggle("active");
 }
+
 </script>
 
 <script src="script.js"></script>
+
 </body>
 </html>
