@@ -1,50 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NovaTrade Dashboard</title>
 <link rel="stylesheet" href="style.css">
+<style>
+  body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+  .card { background: #fff; border-radius: 10px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  #market { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 20px; }
+  .nav { margin-top: 20px; }
+  .nav button { margin-right: 10px; padding: 10px 15px; border: none; border-radius: 5px; background: #007bff; color: white; cursor: pointer; }
+  .nav button:hover { background: #0056b3; }
+</style>
 </head>
 <body>
 
 <div class="card">
-<h2>NovaTrade Market</h2>
-<p>Academic Simulation Only</p>
-<button onclick="toggleTheme()">Toggle Theme</button>
+  <h2>NovaTrade Market</h2>
+  <p>Academic Simulation Only</p>
+  <button onclick="toggleTheme()">Toggle Theme</button>
 </div>
 
 <div id="market"></div>
 
 <div class="nav">
-<button onclick="location.href='trade.html'">Trade</button>
-<button onclick="location.href='index.html'">Logout</button>
+  <button onclick="location.href='trade.html'">Trade</button>
+  <button onclick="location.href='index.html'">Logout</button>
 </div>
-
-<script src="script.js"></script>
 
 <script>
 async function loadMarket(){
- const coins = "bitcoin,ethereum,solana,cardano,ripple,dogecoin,polkadot,litecoin,avalanche-2,tron";
+  const coins = [
+    "bitcoin",
+    "ethereum",
+    "solana",
+    "cardano",
+    "ripple",
+    "dogecoin",
+    "polkadot",
+    "litecoin",
+    "avalanche-2",
+    "tron"
+  ];
 
- const res = await fetch(
-  `https://api.coingecko.com/api/v3/simple/price?ids=${coins}&vs_currencies=usd`
- );
+  try {
+    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coins.join(',')}&vs_currencies=usd`);
+    const data = await res.json();
 
- const data = await res.json();
- const container = document.getElementById("market");
- container.innerHTML = "";
+    const container = document.getElementById("market");
+    container.innerHTML = "";
 
- for(let coin in data){
-   container.innerHTML += `
-   <div class="card">
-     <h3>${coin.toUpperCase()}</h3>
-     <p>$${data[coin].usd}</p>
-   </div>`;
- }
+    coins.forEach(coin => {
+      if(data[coin]){
+        container.innerHTML += `
+          <div class="card">
+            <h3>${coin.charAt(0).toUpperCase() + coin.slice(1)}</h3>
+            <p>$${data[coin].usd.toLocaleString()}</p>
+          </div>`;
+      }
+    });
+  } catch(err) {
+    console.error("Error fetching market data:", err);
+  }
 }
 
+// Initial load
 loadMarket();
+
+// Refresh every 15 seconds
 setInterval(loadMarket, 15000);
+
+// Simple theme toggle
+function toggleTheme(){
+  document.body.classList.toggle('dark');
+}
 </script>
+
+<style>
+body.dark { background: #121212; color: white; }
+body.dark .card { background: #1e1e1e; color: white; }
+body.dark .nav button { background: #1a73e8; }
+</style>
 
 </body>
 </html>
