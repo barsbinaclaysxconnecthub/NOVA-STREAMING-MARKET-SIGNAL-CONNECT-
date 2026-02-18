@@ -5,14 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NovaTrade Dashboard</title>
 <link rel="stylesheet" href="style.css">
-<style>
-  body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
-  .card { background: #fff; border-radius: 10px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-  #market { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 20px; }
-  .nav { margin-top: 20px; }
-  .nav button { margin-right: 10px; padding: 10px 15px; border: none; border-radius: 5px; background: #007bff; color: white; cursor: pointer; }
-  .nav button:hover { background: #0056b3; }
-</style>
 </head>
 <body>
 
@@ -30,57 +22,74 @@
 </div>
 
 <script>
-async function loadMarket(){
-  const coins = [
-    "bitcoin",
-    "ethereum",
-    "solana",
-    "cardano",
-    "ripple",
-    "dogecoin",
-    "polkadot",
-    "litecoin",
-    "avalanche-2",
-    "tron"
-  ];
+const coins = [
+  "bitcoin",
+  "ethereum",
+  "solana",
+  "cardano",
+  "ripple",
+  "dogecoin",
+  "polkadot",
+  "litecoin",
+  "avalanche-2",
+  "tron"
+];
 
+let previousData = {};
+
+// Apply saved theme from localStorage
+if(localStorage.getItem('theme') === 'dark'){
+  document.body.classList.add('dark');
+}
+
+// Toggle theme function
+function toggleTheme(){
+  document.body.classList.toggle('dark');
+  localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+}
+
+// Load market data from CoinGecko
+async function loadMarket(){
   try {
     const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coins.join(',')}&vs_currencies=usd`);
     const data = await res.json();
-
     const container = document.getElementById("market");
     container.innerHTML = "";
 
     coins.forEach(coin => {
       if(data[coin]){
+        let changeClass = "";
+        if(previousData[coin]){
+          if(data[coin].usd > previousData[coin]) changeClass = "green";
+          else if(data[coin].usd < previousData[coin]) changeClass = "red";
+        }
+
         container.innerHTML += `
           <div class="card">
             <h3>${coin.charAt(0).toUpperCase() + coin.slice(1)}</h3>
-            <p>$${data[coin].usd.toLocaleString()}</p>
-          </div>`;
+            <p class="price ${changeClass}">$${data[coin].usd.toLocaleString()}</p>
+          </div>
+        `;
       }
     });
+
+    // Update previous data
+    coins.forEach(coin => previousData[coin] = data[coin]?.usd);
+
   } catch(err) {
     console.error("Error fetching market data:", err);
   }
 }
 
-// Initial load
+// Initial load and refresh every 15s
 loadMarket();
-
-// Refresh every 15 seconds
 setInterval(loadMarket, 15000);
-
-// Simple theme toggle
-function toggleTheme(){
-  document.body.classList.toggle('dark');
-}
 </script>
 
+<!-- Only leave price change colors inline -->
 <style>
-body.dark { background: #121212; color: white; }
-body.dark .card { background: #1e1e1e; color: white; }
-body.dark .nav button { background: #1a73e8; }
+.green { color: #28a745; }
+.red { color: #dc3545; }
 </style>
 
 </body>
