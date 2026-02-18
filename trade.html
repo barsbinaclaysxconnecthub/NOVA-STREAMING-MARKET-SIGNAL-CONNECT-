@@ -7,43 +7,19 @@
 <link rel="stylesheet" href="style.css">
 <style>
 /* ================= SIGNAL + CHART ================= */
-.signal{
-  margin:14px 0;
-  background:var(--signal-bg,#101722);
-  border-radius:16px;
-  padding:14px;
-  color:var(--signal-text,#fff);
-}
+.signal{ margin:14px 0; background:#101722; border-radius:16px; padding:14px; color:white; }
 .signal-top{ display:flex; justify-content:space-between; }
 .price .p{ font-size:18px; font-weight:bold; }
 .chg.up{ color:#00c087; }
 .chg.down{ color:#f6465d; }
 
-.chartWrap{
-  margin:14px 0;
-  background:var(--chart-bg,#0f141b);
-  border-radius:18px;
-  overflow:hidden;
-}
+.chartWrap{ margin:14px 0; background:#0f141b; border-radius:18px; overflow:hidden; }
 canvas{ width:100%; height:320px; display:block; }
 
 /* ================= DEPOSIT POPUP ================= */
-.popup{
-  position:fixed;
-  top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,.7);
-  display:none;
-  justify-content:center;align-items:center;
-}
-.popup-box{
-  background:var(--popup-bg,#fff);
-  padding:20px;width:90%;max-width:400px;border-radius:12px;text-align:center;
-}
-.wallet-box{
-  display:flex;justify-content:space-between;align-items:center;
-  background:var(--wallet-bg,#f2f2f2);
-  padding:8px;border-radius:6px;margin-bottom:10px;font-size:12px;word-break:break-all;
-}
+.popup{ position:fixed; top:0;left:0;width:100%;height:100%; background:rgba(0,0,0,.7); display:none; justify-content:center; align-items:center; }
+.popup-box{ background:white; padding:20px;width:90%;max-width:400px;border-radius:12px;text-align:center; }
+.wallet-box{ display:flex; justify-content:space-between; align-items:center; background:#f2f2f2; padding:8px; border-radius:6px; margin-bottom:10px; font-size:12px; word-break:break-all; }
 .copy-btn{ cursor:pointer; font-size:14px; }
 .loading{ margin-top:10px; font-weight:bold; color:green; }
 
@@ -164,9 +140,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 // ================= BALANCE =================
-let balance = parseFloat(localStorage.getItem("balance"))||500;
 let balanceEl = document.getElementById("balance");
 let historyEl = document.getElementById("history");
+let balance = parseFloat(localStorage.getItem("balance"))||500;
 balanceEl.innerText="$"+balance.toFixed(2);
 window.tradingRunning=true;
 window.tradingHold=false;
@@ -179,6 +155,7 @@ let wallets = {
  "BTC":"bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
  "BNB":"bnb1grpf0955h0ykzq3ar5nmum7y6gdfl6lxfn46h2"
 };
+
 function openDeposit(){ document.getElementById("depositPopup").style.display="flex"; updateWallet(); }
 function closeDeposit(){ document.getElementById("depositPopup").style.display="none"; document.getElementById("depositLoading").innerText=""; }
 function updateWallet(){ document.getElementById("walletAddress").innerText = wallets[document.getElementById("networkSelect").value]; }
@@ -198,6 +175,7 @@ function confirmDeposit(){
  },5000);
 }
 
+// ================= WITHDRAW =================
 function unlockWithdrawal(){
  let amount=parseFloat(document.getElementById("withdrawAmount").value);
  if(amount<1 || balance-amount<500){
@@ -209,14 +187,14 @@ function unlockWithdrawal(){
    balance -= amount;
    localStorage.setItem("balance",balance);
    saveHistory("Withdrawal -"+amount);
-   document.getElementById("withdrawMsg").innerText="Withdrawal Successful!";
    updateBalanceEl();
+   document.getElementById("withdrawMsg").innerText="Withdrawal Successful!";
  },5000);
 }
 
 // ================= CANCEL TRADE =================
 function cancelTrade(){
-  balance = 500; // reset fixed balance
+  balance = 500;
   localStorage.setItem("balance", balance);
   updateBalanceEl();
   window.tradingRunning = false;
@@ -240,12 +218,13 @@ loadHistory();
 
 // ================= LIVE BALANCE =================
 function updateBalanceEl(){ balanceEl.innerText="$"+balance.toFixed(2); }
+
 function liveBalanceTick(){
  if(!window.tradingRunning || window.tradingHold) return;
  let move=(Math.random()*2)*balance*0.002;
  if(Math.random()<0.25) move*=-1;
- balance+=move;
- localStorage.setItem("balance",balance);
+ balance += move;
+ localStorage.setItem("balance", balance);
  balanceEl.classList.remove("balance-up","balance-down");
  balanceEl.classList.add(move>=0?"balance-up":"balance-down");
  updateBalanceEl();
@@ -309,7 +288,7 @@ animate();
 
 // ================= BUTTONS =================
 function startStopTrade(){ window.tradingRunning=!window.tradingRunning; }
-
 </script>
+
 </body>
-  </html> 
+</html>
