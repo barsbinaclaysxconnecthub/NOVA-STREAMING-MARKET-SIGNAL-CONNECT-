@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>NovaTrade Trading</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="card">
+<h2>Trading Simulation</h2>
+<p>Fixed Capital: $500</p>
+<button onclick="toggleTheme()">Toggle Theme</button>
+</div>
+
+<div class="card">
+<h3>Total Balance:</h3>
+<h2 id="balance">$500.00</h2>
+
+<select id="pair">
+<option>BTC/USDT</option>
+<option>ETH/USDT</option>
+<option>SOL/USDT</option>
+<option>ADA/USDT</option>
+<option>XRP/USDT</option>
+<option>DOGE/USDT</option>
+<option>DOT/USDT</option>
+<option>LTC/USDT</option>
+<option>AVAX/USDT</option>
+<option>TRX/USDT</option>
+</select>
+
+<button onclick="startStopTrade()">Start / Stop Trade</button>
+<button onclick="holdContinue()">Hold / Continue</button>
+</div>
+
+<div class="card">
+<h3>Deposit (Simulation)</h3>
+<input type="number" id="depositAmount" placeholder="Enter amount">
+<button onclick="simulateDeposit()">Confirm Deposit</button>
+<p id="depositMsg"></p>
+</div>
+
+<div class="card">
+<h3>Withdrawal (Simulation)</h3>
+<input type="number" id="withdrawAmount" placeholder="Enter amount">
+<button onclick="unlockWithdrawal()">Unlock Withdrawal</button>
+<p id="withdrawMsg"></p>
+</div>
+
+<div class="card">
+<h3>Transaction History</h3>
+<ul id="history"></ul>
+</div>
+
+<div class="nav">
+<button onclick="location.href='withdrawal.html'">Withdrawal Page</button>
+<button onclick="location.href='home.html'">Dashboard</button>
+</div>
+
+<script src="script.js"></script>
+
+<script>
+document.getElementById("balance").innerText =
+ "$" + (parseFloat(localStorage.getItem("balance")) || 500).toFixed(2);
+
+function simulateDeposit(){
+ let amount = parseFloat(depositAmount.value);
+ if(!amount || amount <= 0) return;
+
+ depositMsg.innerText = "Processing deposit... (1 min simulation)";
+
+ setTimeout(()=>{
+   let bal = parseFloat(localStorage.getItem("balance")) || 500;
+   bal += amount;
+   localStorage.setItem("balance", bal);
+   depositMsg.innerText = "Deposit Successful!";
+   saveHistory("Deposit +" + amount);
+   location.reload();
+ }, 60000);
+}
+
+function unlockWithdrawal(){
+ let amount = parseFloat(withdrawAmount.value);
+ let bal = parseFloat(localStorage.getItem("balance")) || 500;
+
+ if(amount < 1 || bal - amount < 500){
+   withdrawMsg.innerText = "Cannot withdraw below $500 base capital.";
+   return;
+ }
+
+ withdrawMsg.innerText = "Unlocking withdrawal... (1 min)";
+ setTimeout(()=>{
+   bal -= amount;
+   localStorage.setItem("balance", bal);
+   withdrawMsg.innerText = "Withdrawal Successful!";
+   saveHistory("Withdrawal -" + amount);
+   location.reload();
+ }, 60000);
+}
+
+function saveHistory(text){
+ let list = JSON.parse(localStorage.getItem("history")) || [];
+ list.push(text + " | " + new Date().toLocaleTimeString());
+ localStorage.setItem("history", JSON.stringify(list));
+}
+
+function loadHistory(){
+ let list = JSON.parse(localStorage.getItem("history")) || [];
+ list.forEach(item=>{
+   history.innerHTML += `<li>${item}</li>`;
+ });
+}
+loadHistory();
+</script>
+
+</body>
+</html>
