@@ -3,6 +3,86 @@
 <head>
 <title>NovaTrade Trading</title>
 <link rel="stylesheet" href="style.css">
+<style>
+
+/* ============================= */
+/* SIGNAL + CHART STYLES */
+/* ============================= */
+
+.signal{
+  margin:14px 0;
+  background:#101722;
+  border-radius:16px;
+  padding:14px;
+  color:white;
+}
+.signal-top{
+  display:flex;
+  justify-content:space-between;
+}
+.price .p{font-size:18px;font-weight:bold;}
+.chg.up{color:#00c087;}
+.chg.down{color:#f6465d;}
+
+.chartWrap{
+  margin:14px 0;
+  background:#0f141b;
+  border-radius:18px;
+  overflow:hidden;
+}
+canvas{
+  width:100%;
+  height:320px;
+  display:block;
+}
+
+/* ============================= */
+/* DEPOSIT POPUP */
+/* ============================= */
+
+.popup{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,.7);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+
+.popup-box{
+  background:white;
+  padding:20px;
+  width:90%;
+  max-width:400px;
+  border-radius:12px;
+  text-align:center;
+}
+
+.wallet-box{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:#f2f2f2;
+  padding:8px;
+  border-radius:6px;
+  margin-bottom:10px;
+  font-size:12px;
+  word-break:break-all;
+}
+
+.copy-btn{
+  cursor:pointer;
+  font-size:14px;
+}
+
+.loading{
+  margin-top:10px;
+  font-weight:bold;
+  color:green;
+}
+
+</style>
 </head>
 <body>
 
@@ -33,32 +113,35 @@
 <button onclick="holdContinue()">Hold / Continue</button>
 </div>
 
-<!-- ------------------------ -->
-<!-- Animated Signal + Chart -->
-<!-- ------------------------ -->
+<!-- ================= SIGNAL ================= -->
+
 <div class="card signal">
   <div class="signal-top">
     <div>
       <h2 id="signalText">Signal: BUY</h2>
-      <small id="signalDesc">Trend confirmed • Strong momentum</small>
+      <small id="signalDesc">Confidence: 80%</small>
     </div>
     <div class="price">
       <div class="p" id="signalPrice">50000</div>
       <div class="chg up" id="signalChange">+0.00%</div>
     </div>
   </div>
+  <button onclick="toggleMarketMode()">Change Market Mode</button>
 </div>
 
 <div class="card chartWrap">
   <canvas id="chart"></canvas>
 </div>
 
+<!-- ================= DEPOSIT ================= -->
+
 <div class="card">
 <h3>Deposit (Simulation)</h3>
-<input type="number" id="depositAmount" placeholder="Enter amount">
-<button onclick="simulateDeposit()">Confirm Deposit</button>
+<button onclick="openDeposit()">Make Deposit</button>
 <p id="depositMsg"></p>
 </div>
+
+<!-- ================= WITHDRAW ================= -->
 
 <div class="card">
 <h3>Withdrawal (Simulation)</h3>
@@ -77,180 +160,231 @@
 <button onclick="location.href='home.html'">Dashboard</button>
 </div>
 
+<!-- ================= POPUP ================= -->
+
+<div class="popup" id="depositPopup">
+<div class="popup-box">
+
+<h3>Select Network</h3>
+
+<select id="networkSelect" onchange="updateWallet()">
+<option value="USDT-ERC20">USDT (ERC20)</option>
+<option value="USDT-TRC20">USDT (TRC20)</option>
+<option value="SOL">SOL</option>
+<option value="BTC">BTC</option>
+<option value="BNB">BNB</option>
+</select>
+
+<div class="wallet-box">
+<span id="walletAddress"></span>
+<span class="copy-btn" onclick="copyWallet()">📋</span>
+</div>
+
+<input type="number" id="depositAmount" placeholder="Enter amount">
+<button onclick="confirmDeposit()">Confirm Deposit</button>
+
+<div class="loading" id="depositLoading"></div>
+
+<button onclick="closeDeposit()">Close</button>
+
+</div>
+</div>
+
 <script src="script.js"></script>
 
 <script>
+
+/* ================= BALANCE INIT ================= */
+
 document.getElementById("balance").innerText =
  "$" + (parseFloat(localStorage.getItem("balance")) || 500).toFixed(2);
 
-function simulateDeposit(){
- let amount = parseFloat(depositAmount.value);
- if(!amount || amount <= 0) return;
+/* ================= WALLET ADDRESSES ================= */
 
- depositMsg.innerText = "Processing deposit... (1 min simulation)";
+let wallets = {
+ "USDT-ERC20":"0xA7f9C12D4E5F678901234567890ABCDEF1234567",
+ "USDT-TRC20":"TXYz123456789ABCDEFGHJKLMNPQRST",
+ "SOL":"9xQeWvG816bUx9EPfC9w8PqgkF5abcXYZ1234567",
+ "BTC":"bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+ "BNB":"bnb1grpf0955h0ykzq3ar5nmum7y6gdfl6lxfn46h2"
+};
 
- setTimeout(()=>{
-   let bal = parseFloat(localStorage.getItem("balance")) || 500;
-   bal += amount;
-   localStorage.setItem("balance", bal);
-   depositMsg.innerText = "Deposit Successful!";
-   saveHistory("Deposit +" + amount);
-   location.reload();
- }, 60000);
+function openDeposit(){
+ document.getElementById("depositPopup").style.display="flex";
+ updateWallet();
 }
 
-function unlockWithdrawal(){
- let amount = parseFloat(withdrawAmount.value);
- let bal = parseFloat(localStorage.getItem("balance")) || 500;
+function closeDeposit(){
+ document.getElementById("depositPopup").style.display="none";
+ document.getElementById("depositLoading").innerText="";
+}
 
- if(amount < 1 || bal - amount < 500){
-   withdrawMsg.innerText = "Cannot withdraw below $500 base capital.";
+function updateWallet(){
+ let net=document.getElementById("networkSelect").value;
+ document.getElementById("walletAddress").innerText=wallets[net];
+}
+
+function copyWallet(){
+ let text=document.getElementById("walletAddress").innerText;
+ navigator.clipboard.writeText(text);
+ alert("Wallet Address Copied!");
+}
+
+function confirmDeposit(){
+ let amount=parseFloat(document.getElementById("depositAmount").value);
+ if(!amount||amount<=0)return;
+
+ document.getElementById("depositLoading").innerText="Confirming deposit...";
+
+ setTimeout(()=>{
+   let bal=parseFloat(localStorage.getItem("balance"))||500;
+   bal+=amount;
+   localStorage.setItem("balance",bal);
+   saveHistory("Deposit +"+amount);
+   document.getElementById("depositLoading").innerText="Deposit Successful!";
+   setTimeout(()=>location.reload(),1500);
+ },60000);
+}
+
+/* ================= WITHDRAW ================= */
+
+function unlockWithdrawal(){
+ let amount=parseFloat(withdrawAmount.value);
+ let bal=parseFloat(localStorage.getItem("balance"))||500;
+
+ if(amount<1||bal-amount<500){
+   withdrawMsg.innerText="Cannot withdraw below $500 base capital.";
    return;
  }
 
- withdrawMsg.innerText = "Unlocking withdrawal... (1 min)";
+ withdrawMsg.innerText="Unlocking withdrawal...";
+
  setTimeout(()=>{
-   bal -= amount;
-   localStorage.setItem("balance", bal);
-   withdrawMsg.innerText = "Withdrawal Successful!";
-   saveHistory("Withdrawal -" + amount);
-   location.reload();
- }, 60000);
+   bal-=amount;
+   localStorage.setItem("balance",bal);
+   saveHistory("Withdrawal -"+amount);
+   withdrawMsg.innerText="Withdrawal Successful!";
+   setTimeout(()=>location.reload(),1500);
+ },60000);
 }
 
+/* ================= HISTORY ================= */
+
 function saveHistory(text){
- let list = JSON.parse(localStorage.getItem("history")) || [];
- list.push(text + " | " + new Date().toLocaleTimeString());
- localStorage.setItem("history", JSON.stringify(list));
+ let list=JSON.parse(localStorage.getItem("history"))||[];
+ list.push(text+" | "+new Date().toLocaleTimeString());
+ localStorage.setItem("history",JSON.stringify(list));
 }
 
 function loadHistory(){
- let list = JSON.parse(localStorage.getItem("history")) || [];
+ let list=JSON.parse(localStorage.getItem("history"))||[];
  list.forEach(item=>{
-   history.innerHTML += `<li>${item}</li>`;
+   history.innerHTML+=`<li>${item}</li>`;
  });
 }
 loadHistory();
 
-/* ------------------------ */
-/* Signal + Animated Chart */
-/* ------------------------ */
-const canvas = document.getElementById("chart");
-const ctx = canvas.getContext("2d");
-canvas.width = canvas.offsetWidth;
-canvas.height = 320;
+/* ================= ADVANCED MARKET ================= */
 
-let data = [];
-const MAX_POINTS = 50;
-let price = 50000; // starting price
+const canvas=document.getElementById("chart");
+const ctx=canvas.getContext("2d");
+canvas.width=canvas.offsetWidth;
+canvas.height=320;
 
-function generateNextPrice() {
-  const change = (Math.random() - 0.5) * 100; // small random fluctuation
-  price = Math.max(100, price + change);
-  data.push(price);
-  if(data.length > MAX_POINTS) data.shift();
+let candles=[];
+let maxCandles=40;
+let basePrice=50000;
+let marketMode="Normal";
+
+let pairVolatility={
+"BTC/USDT":120,"ETH/USDT":80,"SOL/USDT":60,
+"ADA/USDT":40,"XRP/USDT":35,"DOGE/USDT":30,
+"DOT/USDT":45,"LTC/USDT":55,"AVAX/USDT":70,"TRX/USDT":25
+};
+
+let modeMultiplier={"Calm":0.5,"Normal":1,"Volatile":2};
+
+function toggleMarketMode(){
+ if(marketMode==="Calm")marketMode="Normal";
+ else if(marketMode==="Normal")marketMode="Volatile";
+ else marketMode="Calm";
 }
 
-function drawChart() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+function generateCandle(){
+ let pair=document.getElementById("pair").value;
+ let vol=pairVolatility[pair]*modeMultiplier[marketMode];
+
+ let open=basePrice;
+ let close=open+(Math.random()-0.5)*vol;
+ let high=Math.max(open,close)+Math.random()*vol/2;
+ let low=Math.min(open,close)-Math.random()*vol/2;
+
+ basePrice=close;
+
+ candles.push({open,close,high,low});
+ if(candles.length>maxCandles)candles.shift();
+}
+
+function drawChart(){
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ let max=Math.max(...candles.map(c=>c.high));
+ let min=Math.min(...candles.map(c=>c.low));
+ let w=canvas.width/maxCandles;
+
+ candles.forEach((c,i)=>{
+  let x=i*w+w/4;
+  let scale=canvas.height/(max-min||1);
+  let openY=canvas.height-(c.open-min)*scale;
+  let closeY=canvas.height-(c.close-min)*scale;
+  let highY=canvas.height-(c.high-min)*scale;
+  let lowY=canvas.height-(c.low-min)*scale;
+
+  ctx.strokeStyle=c.close>c.open?"#00c087":"#f6465d";
+  ctx.fillStyle=ctx.strokeStyle;
+
   ctx.beginPath();
-  ctx.strokeStyle = "#f0b90b";
-  ctx.lineWidth = 2;
-  const minPrice = Math.min(...data);
-  const maxPrice = Math.max(...data);
-  for(let i=0;i<data.length;i++){
-    const x = (canvas.width/MAX_POINTS)*i;
-    const y = canvas.height - ((data[i]-minPrice)/(maxPrice-minPrice||1) * canvas.height);
-    if(i===0) ctx.moveTo(x,y);
-    else ctx.lineTo(x,y);
-  }
+  ctx.moveTo(x+w/4,highY);
+  ctx.lineTo(x+w/4,lowY);
   ctx.stroke();
+
+  ctx.fillRect(x,Math.min(openY,closeY),w/2,Math.abs(openY-closeY)||2);
+ });
 }
 
-function updateSignal() {
-  if(data.length < 2) return;
-  const change = data[data.length-1] - data[data.length-2];
-  const signalText = document.getElementById("signalText");
-  const signalChange = document.getElementById("signalChange");
-  const signalPrice = document.getElementById("signalPrice");
+function updateSignal(){
+ if(candles.length<2)return;
 
-  signalPrice.textContent = Math.round(price);
+ let last=candles[candles.length-1];
+ let prev=candles[candles.length-2];
 
-  if(change > 0){
-    signalText.textContent = "Signal: BUY";
-    signalChange.textContent = "+" + change.toFixed(2);
-    signalChange.className = "chg up";
-  } else {
-    signalText.textContent = "Signal: SELL";
-    signalChange.textContent = change.toFixed(2);
-    signalChange.className = "chg down";
-  }
+ let change=last.close-prev.close;
+ let confidence=Math.floor(Math.random()*20)+75;
+
+ signalPrice.innerText=Math.round(last.close);
+
+ if(change>0){
+   signalText.innerText="Signal: BUY";
+   signalChange.innerText="+"+change.toFixed(2);
+   signalChange.className="chg up";
+ }else{
+   signalText.innerText="Signal: SELL";
+   signalChange.innerText=change.toFixed(2);
+   signalChange.className="chg down";
+ }
+
+ signalDesc.innerText="Confidence: "+confidence+"% | Mode: "+marketMode;
 }
 
-function animate() {
-  generateNextPrice();
-  drawChart();
-  updateSignal();
-  requestAnimationFrame(()=>setTimeout(animate, 500)); // slow animation
+function animate(){
+ generateCandle();
+ drawChart();
+ updateSignal();
+ setTimeout(animate,1200);
 }
 
 animate();
+
 </script>
-
-<style>
-/* ------------------------ */
-/* Signal + Animated Chart Styles */
-.signal{
-  margin:14px 0;
-  background:#101722;
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:16px;
-  padding:14px;
-  box-shadow:0 10px 40px rgba(0,0,0,.35);
-}
-.signal-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:10px;
-}
-.signal h2{
-  font-size:15px;
-  margin-bottom:4px;
-}
-.signal small{
-  color:#9aa4b2;
-  font-size:12px;
-}
-.price{
-  text-align:right;
-}
-.price .p{
-  font-size:18px;
-  font-weight:800;
-}
-.price .chg{
-  font-size:12px;
-  font-weight:700;
-  margin-top:3px;
-}
-.chg.up{color:#00c087;}
-.chg.down{color:#f6465d;}
-
-.chartWrap{
-  margin:14px 0;
-  background:#0f141b;
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:18px;
-  overflow:hidden;
-  box-shadow:0 10px 40px rgba(0,0,0,.35);
-}
-canvas{
-  width:100%;
-  height:320px;
-  display:block;
-}
-</style>
 
 </body>
 </html>
