@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>NovaTrade Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="card">
+<h2>NovaTrade Market</h2>
+<p>Academic Simulation Only</p>
+<button onclick="toggleTheme()">Toggle Theme</button>
+</div>
+
+<div id="market"></div>
+
+<div class="nav">
+<button onclick="location.href='trade.html'">Trade</button>
+<button onclick="location.href='index.html'">Logout</button>
+</div>
+
+<script src="script.js"></script>
+
+<script>
+async function loadMarket(){
+ const coins = "bitcoin,ethereum,solana,cardano,ripple,dogecoin,polkadot,litecoin,avalanche-2,tron";
+
+ const res = await fetch(
+  `https://api.coingecko.com/api/v3/simple/price?ids=${coins}&vs_currencies=usd`
+ );
+
+ const data = await res.json();
+ const container = document.getElementById("market");
+ container.innerHTML = "";
+
+ for(let coin in data){
+   container.innerHTML += `
+   <div class="card">
+     <h3>${coin.toUpperCase()}</h3>
+     <p>$${data[coin].usd}</p>
+   </div>`;
+ }
+}
+
+loadMarket();
+setInterval(loadMarket, 15000);
+</script>
+
+</body>
+</html>
