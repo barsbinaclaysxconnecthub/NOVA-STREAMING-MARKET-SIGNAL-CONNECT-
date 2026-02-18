@@ -1,8 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NovaTrade Withdrawal</title>
 <link rel="stylesheet" href="style.css">
+<style>
+/* ================= LIVE BALANCE ================= */
+#balance { font-variant-numeric: tabular-nums; }
+</style>
 </head>
 <body>
 
@@ -50,15 +56,26 @@
 <button onclick="location.href='home.html'">Dashboard</button>
 </div>
 
-<script src="script.js"></script>
-
 <script>
+// ================= THEME PERSISTENCE =================
+function toggleTheme(){
+  document.body.classList.toggle('dark');
+  localStorage.setItem('theme',document.body.className);
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const theme = localStorage.getItem('theme');
+  if(theme) document.body.className = theme;
+});
 
-// Load balance
+// ================= BALANCE =================
+let balanceEl = document.getElementById("balance");
+let historyEl = document.getElementById("history");
+
+// load balance from trade.html
 let balance = parseFloat(localStorage.getItem("balance")) || 500;
-document.getElementById("balance").innerText = "$" + balance.toFixed(2);
+balanceEl.innerText = "$" + balance.toFixed(2);
 
-// Wallet format validation (basic simulation patterns)
+// ================= WALLET VALIDATION =================
 function validateWallet(coin, address){
  const patterns = {
    BTC: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
@@ -72,12 +89,11 @@ function validateWallet(coin, address){
    AVAX: /^X-[a-zA-Z0-9]{30,}$/,
    TRX: /^T[a-zA-Z0-9]{33}$/
  };
-
  return patterns[coin].test(address);
 }
 
+// ================= WITHDRAWAL FUNCTION =================
 function unlockWithdrawal(){
-
  let coin = document.getElementById("coin").value;
  let wallet = document.getElementById("wallet").value.trim();
  let amount = parseFloat(document.getElementById("amount").value);
@@ -102,14 +118,14 @@ function unlockWithdrawal(){
 
  setTimeout(()=>{
    balance -= amount;
-   localStorage.setItem("balance", balance);
+   localStorage.setItem("balance", balance); // update global balance
    saveHistory(`Withdrawal ${coin} - $${amount}`);
    msg.innerText = "Withdrawal Successful (Simulation)";
-   document.getElementById("balance").innerText = "$" + balance.toFixed(2);
+   balanceEl.innerText = "$" + balance.toFixed(2);
  }, 60000);
 }
 
-// Save history
+// ================= HISTORY FUNCTIONS =================
 function saveHistory(text){
  let history = JSON.parse(localStorage.getItem("history")) || [];
  history.push(text + " | " + new Date().toLocaleTimeString());
@@ -117,17 +133,16 @@ function saveHistory(text){
  loadHistory();
 }
 
-// Load history
 function loadHistory(){
+ historyEl.innerHTML = "";
  let list = JSON.parse(localStorage.getItem("history")) || [];
- document.getElementById("history").innerHTML = "";
  list.forEach(item=>{
-   document.getElementById("history").innerHTML += `<li>${item}</li>`;
+   historyEl.innerHTML += `<li>${item}</li>`;
  });
 }
 
+// load existing history on page load
 loadHistory();
-
 </script>
 
 </body>
