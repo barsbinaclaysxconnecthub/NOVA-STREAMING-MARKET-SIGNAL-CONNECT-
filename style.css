@@ -76,3 +76,19 @@ input, select, textarea {
   from { opacity: 1; }
   to { opacity: 0.5; }
 }
+
+/* ================= LIVE BALANCE ================= */
+
+.balance-up{
+ color:#00c087;
+ transition:.3s;
+}
+
+.balance-down{
+ color:#f6465d;
+ transition:.3s;
+}
+
+#balance{
+ font-variant-numeric: tabular-nums;
+}
