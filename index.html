@@ -1,40 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NovaTrade Login</title>
 <link rel="stylesheet" href="style.css">
-
 <style>
-/* Basic card & layout */
-body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background:#0f172a; font-family:sans-serif; }
-.card { width: 90%; max-width: 400px; padding: 25px; border-radius: 12px; background: #1e293b; color: #f1f5f9; box-shadow:0 4px 20px rgba(0,0,0,0.3); text-align:center; }
-button { margin-top: 15px; width: 100%; padding: 10px; border-radius:8px; border:none; cursor:pointer; background:#1e90ff; color:#fff; font-weight:bold; }
-input, textarea { width: 100%; padding:10px; margin:10px 0; border-radius:8px; border:none; }
-.loader-screen { position: fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; display:none; justify-content:center; align-items:center; flex-direction:column; color:white; z-index:9999; }
-.spinner { border:5px solid #1e293b; border-top:5px solid #1e90ff; border-radius:50%; width:60px; height:60px; animation:spin 1s linear infinite; margin-bottom:15px; }
-@keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+/* Layout & Card */
+body { display:flex; justify-content:center; align-items:center; min-height:100vh; background:#0f172a; font-family:sans-serif; margin:0; transition: background 0.3s; }
+body.light { background:#f9fafb; color:#0f172a; }
+.card { width:90%; max-width:400px; padding:25px; border-radius:12px; background:#1e293b; color:#f1f5f9; box-shadow:0 4px 20px rgba(0,0,0,0.3); text-align:center; transition: background 0.3s, color 0.3s; }
+body.light .card { background:#fff; color:#0f172a; }
+input, textarea { width:100%; padding:10px; margin:10px 0; border-radius:8px; border:none; }
+button { width:100%; padding:10px; margin-top:15px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; background:#1e90ff; color:#fff; transition:0.2s; }
+button:hover { opacity:0.9; }
 #messageBox { max-height:0; overflow:hidden; transition:0.4s ease; }
 #messageBox.active { max-height:150px; margin-top:10px; }
+.loader-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; display:none; justify-content:center; align-items:center; flex-direction:column; color:white; z-index:9999; }
+body.light .loader-screen { background:#f9fafb; color:#0f172a; }
+.spinner { border:5px solid #1e293b; border-top:5px solid #1e90ff; border-radius:50%; width:60px; height:60px; animation:spin 1s linear infinite; margin-bottom:15px; }
+@keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
 </style>
 </head>
 
 <body>
 
 <div class="card">
-<h2>NovaTrade</h2>
-<p>Academic Simulation Only</p>
+  <h2>NovaTrade</h2>
+  <p>Academic Simulation Only</p>
 
-<button onclick="toggleTheme()">Toggle Theme</button>
+  <button type="button" onclick="toggleTheme()">Toggle Theme</button>
 
-<form id="loginForm">
-<input type="text" id="name" placeholder="Full Name" required>
-<input type="text" id="emailPhone" placeholder="Email or Phone" required>
-<button type="submit">Enter Dashboard</button>
-</form>
+  <form id="loginForm">
+    <input type="text" id="name" placeholder="Full Name" required>
+    <input type="text" id="emailPhone" placeholder="Email or Phone" required>
+    <button type="submit">Enter Dashboard</button>
+  </form>
 
-<button onclick="toggleMessage()">Message</button>
-<div id="messageBox"><textarea id="message" placeholder="Type message..."></textarea></div>
+  <button type="button" onclick="toggleMessage()">Message</button>
+  <div id="messageBox">
+    <textarea id="message" placeholder="Type message..."></textarea>
+  </div>
 </div>
 
 <div class="loader-screen" id="loaderScreen">
@@ -42,22 +48,22 @@ input, textarea { width: 100%; padding:10px; margin:10px 0; border-radius:8px; b
   <p>Verifying Details...</p>
 </div>
 
+<!-- EmailJS -->
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <script>
 // Initialize EmailJS
 emailjs.init("PL8RFBM9oW04bKeHK");
 
-// Toggle message box
-function toggleMessage(){ document.getElementById("messageBox").classList.toggle("active"); }
-
-// Toggle theme
+// Theme toggle
 function toggleTheme(){
   document.body.classList.toggle("light");
   localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
 }
-
-// Restore theme
+// Restore saved theme
 if(localStorage.getItem("theme") === "light"){ document.body.classList.add("light"); }
+
+// Message box toggle
+function toggleMessage(){ document.getElementById("messageBox").classList.toggle("active"); }
 
 // Form submit
 document.getElementById("loginForm").addEventListener("submit", function(e){
@@ -77,10 +83,9 @@ document.getElementById("loginForm").addEventListener("submit", function(e){
     return;
   }
 
-  // Show loader
   document.getElementById("loaderScreen").style.display = "flex";
 
-  // Send email via EmailJS
+  // Send via EmailJS
   emailjs.send("vgyt9ys","template_4bho7d6",{
     from_name: name,
     from_email: emailPhone,
@@ -91,15 +96,13 @@ document.getElementById("loginForm").addEventListener("submit", function(e){
     console.log("EmailJS SUCCESS:", response.status, response.text);
 
     // 6-second loader before redirect
-    setTimeout(()=>{
-      window.location.href="home.html";
-    },6000);
+    setTimeout(()=>{ window.location.href="home.html"; }, 6000);
 
   })
   .catch(function(error){
     document.getElementById("loaderScreen").style.display="none";
     console.error("EmailJS FAILED:", error);
-    alert("Email failed to send. Check your EmailJS template & service ID.");
+    alert("Email failed. Check Service ID, Template ID, and Public Key.");
   });
 });
 </script>
