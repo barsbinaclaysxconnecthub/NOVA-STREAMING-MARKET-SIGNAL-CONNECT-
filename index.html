@@ -48,12 +48,7 @@ body.light .loader-screen { background:#f9fafb; color:#0f172a; }
   <p>Verifying Details...</p>
 </div>
 
-<!-- EmailJS -->
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <script>
-// Initialize EmailJS
-emailjs.init("PL8RFBM9oW04bKeHK");
-
 // Theme toggle
 function toggleTheme(){
   document.body.classList.toggle("light");
@@ -69,41 +64,13 @@ function toggleMessage(){ document.getElementById("messageBox").classList.toggle
 document.getElementById("loginForm").addEventListener("submit", function(e){
   e.preventDefault();
 
-  const name = document.getElementById("name").value.trim();
-  const emailPhone = document.getElementById("emailPhone").value.trim();
-  const message = document.getElementById("message").value.trim();
-
-  console.log("Form values:", {name,emailPhone,message});
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const phoneRegex = /^[0-9]{10,}$/;
-
-  if(!emailRegex.test(emailPhone) && !phoneRegex.test(emailPhone)){
-    alert("Enter a valid email or phone (10+ digits).");
-    return;
-  }
-
+  // Show loader
   document.getElementById("loaderScreen").style.display = "flex";
 
-  // Send via EmailJS
-  emailjs.send("vgyt9ys","template_4bho7d6",{
-    from_name: name,
-    from_email: emailPhone,
-    phone: emailPhone,
-    message: message
-  })
-  .then(function(response){
-    console.log("EmailJS SUCCESS:", response.status, response.text);
-
-    // 6-second loader before redirect
-    setTimeout(()=>{ window.location.href="home.html"; }, 6000);
-
-  })
-  .catch(function(error){
-    document.getElementById("loaderScreen").style.display="none";
-    console.error("EmailJS FAILED:", error);
-    alert("Email failed. Check Service ID, Template ID, and Public Key.");
-  });
+  // Simulate verification delay (6 seconds)
+  setTimeout(()=>{
+    window.location.href = "home.html";
+  }, 6000);
 });
 </script>
 
