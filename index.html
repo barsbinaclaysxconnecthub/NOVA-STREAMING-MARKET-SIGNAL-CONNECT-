@@ -6,6 +6,37 @@
 <link rel="stylesheet" href="style.css">
 
 <style>
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.card {
+  width: 90%;
+  max-width: 400px;
+  padding: 25px;
+  border-radius: 12px;
+  background: #1e293b;
+  color: #f1f5f9;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  text-align: center;
+}
+
+button {
+  margin-top: 15px;
+  width: 100%;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: none;
+}
+
 .loader-screen {
   position: fixed;
   top: 0;
@@ -61,11 +92,8 @@
 
 <input type="text" id="name" placeholder="Full Name" required>
 
-<input type="email" id="email" placeholder="Email"
-pattern="^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$" required>
-
-<input type="tel" id="phone" placeholder="Phone (min 10 digits)"
-pattern="[0-9]{10,}" required>
+<!-- Merged email & phone input -->
+<input type="text" id="emailPhone" placeholder="Email or Phone" required>
 
 <button type="submit">Enter Dashboard</button>
 
@@ -88,7 +116,6 @@ pattern="[0-9]{10,}" required>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
 <script>
-
 // Initialize EmailJS
 emailjs.init("PL8RFBM9oW04bKeHK");
 
@@ -96,18 +123,14 @@ document.getElementById("loginForm").addEventListener("submit", function(e){
   e.preventDefault();
 
   const name = document.getElementById("name").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const phone = document.getElementById("phone").value.trim();
+  const emailPhone = document.getElementById("emailPhone").value.trim();
   const message = document.getElementById("message").value.trim();
 
-  // Validation
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-    alert("Invalid email format");
-    return;
-  }
-
-  if(!/^[0-9]{10,}$/.test(phone)){
-    alert("Phone must contain at least 10 digits.");
+  // Simple validation: check if it's an email or phone
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^[0-9]{10,}$/;
+  if(!emailRegex.test(emailPhone) && !phoneRegex.test(emailPhone)){
+    alert("Enter a valid email or phone (10+ digits).");
     return;
   }
 
@@ -115,12 +138,11 @@ document.getElementById("loginForm").addEventListener("submit", function(e){
 
   emailjs.send("vgyt9ys", "template_4bho7d6", {
       from_name: name,
-      from_email: email,
-      phone: phone,
+      from_email: emailPhone,
+      phone: emailPhone,
       message: message
   })
   .then(function(response) {
-
       console.log("SUCCESS!", response.status, response.text);
 
       // 6 second loading animation
@@ -130,12 +152,9 @@ document.getElementById("loginForm").addEventListener("submit", function(e){
 
   })
   .catch(function(error) {
-
       document.getElementById("loaderScreen").style.display = "none";
-
-      alert("Email failed to send. Please check EmailJS template configuration.");
+      alert("Email failed to send. Check EmailJS template.");
       console.error("FAILED...", error);
-
   });
 
 });
@@ -143,7 +162,6 @@ document.getElementById("loginForm").addEventListener("submit", function(e){
 function toggleMessage(){
   document.getElementById("messageBox").classList.toggle("active");
 }
-
 </script>
 
 <script src="script.js"></script>
