@@ -42,7 +42,6 @@
 <input type="number" id="amount" placeholder="Enter Withdrawal Amount">
 
 <button onclick="unlockWithdrawal()">Request Withdrawal</button>
-
 <p id="message"></p>
 </div>
 
@@ -60,9 +59,9 @@
 // ================= THEME PERSISTENCE =================
 function toggleTheme(){
   document.body.classList.toggle('dark');
-  localStorage.setItem('theme',document.body.className);
+  localStorage.setItem('theme', document.body.className);
 }
-document.addEventListener('DOMContentLoaded',()=>{
+document.addEventListener('DOMContentLoaded', () => {
   const theme = localStorage.getItem('theme');
   if(theme) document.body.className = theme;
 });
@@ -70,8 +69,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 // ================= BALANCE =================
 let balanceEl = document.getElementById("balance");
 let historyEl = document.getElementById("history");
-
-// load balance from trade.html
 let balance = parseFloat(localStorage.getItem("balance")) || 500;
 balanceEl.innerText = "$" + balance.toFixed(2);
 
@@ -119,9 +116,9 @@ function unlockWithdrawal(){
  setTimeout(()=>{
    balance -= amount;
    localStorage.setItem("balance", balance); // update global balance
+   updateBalanceEl();
    saveHistory(`Withdrawal ${coin} - $${amount}`);
    msg.innerText = "Withdrawal Successful (Simulation)";
-   balanceEl.innerText = "$" + balance.toFixed(2);
  }, 60000);
 }
 
@@ -141,7 +138,21 @@ function loadHistory(){
  });
 }
 
-// load existing history on page load
+// ================= BALANCE DISPLAY =================
+function updateBalanceEl(){
+ balanceEl.innerText = "$" + balance.toFixed(2);
+}
+
+// ================= AUTO-REFRESH BALANCE =================
+// Keeps balance synced if trade.html updates balance
+setInterval(()=>{
+ let storedBalance = parseFloat(localStorage.getItem("balance")) || 500;
+ if(storedBalance !== balance){
+   balance = storedBalance;
+   updateBalanceEl();
+ }
+}, 1000);
+
 loadHistory();
 </script>
 
