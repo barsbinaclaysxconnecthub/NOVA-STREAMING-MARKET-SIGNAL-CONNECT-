@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NovaTrade Trading</title>
 <link rel="stylesheet" href="style.css">
 <style>
-
-/* ============================= */
-/* SIGNAL + CHART STYLES */
-/* ============================= */
-
+/* ================= SIGNAL + CHART STYLES ================= */
 .signal{
   margin:14px 0;
   background:#101722;
@@ -36,10 +34,7 @@ canvas{
   display:block;
 }
 
-/* ============================= */
-/* DEPOSIT POPUP */
-/* ============================= */
-
+/* ================= DEPOSIT POPUP ================= */
 .popup{
   position:fixed;
   top:0;left:0;
@@ -49,7 +44,6 @@ canvas{
   justify-content:center;
   align-items:center;
 }
-
 .popup-box{
   background:white;
   padding:20px;
@@ -58,7 +52,6 @@ canvas{
   border-radius:12px;
   text-align:center;
 }
-
 .wallet-box{
   display:flex;
   justify-content:space-between;
@@ -70,18 +63,14 @@ canvas{
   font-size:12px;
   word-break:break-all;
 }
+.copy-btn{cursor:pointer;font-size:14px;}
+.loading{margin-top:10px;font-weight:bold;color:green;}
 
-.copy-btn{
-  cursor:pointer;
-  font-size:14px;
-}
-
-.loading{
-  margin-top:10px;
-  font-weight:bold;
-  color:green;
-}
-
+/* ================= LIVE BALANCE ================= */
+@keyframes blink { from { opacity: 1; } to { opacity: 0.5; } }
+.balance-up{ color:#00c087; transition:.3s; }
+.balance-down{ color:#f6465d; transition:.3s; }
+#balance{ font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
@@ -114,7 +103,6 @@ canvas{
 </div>
 
 <!-- ================= SIGNAL ================= -->
-
 <div class="card signal">
   <div class="signal-top">
     <div>
@@ -134,7 +122,6 @@ canvas{
 </div>
 
 <!-- ================= DEPOSIT ================= -->
-
 <div class="card">
 <h3>Deposit (Simulation)</h3>
 <button onclick="openDeposit()">Make Deposit</button>
@@ -142,7 +129,6 @@ canvas{
 </div>
 
 <!-- ================= WITHDRAW ================= -->
-
 <div class="card">
 <h3>Withdrawal (Simulation)</h3>
 <input type="number" id="withdrawAmount" placeholder="Enter amount">
@@ -150,6 +136,7 @@ canvas{
 <p id="withdrawMsg"></p>
 </div>
 
+<!-- ================= HISTORY ================= -->
 <div class="card">
 <h3>Transaction History</h3>
 <ul id="history"></ul>
@@ -161,12 +148,9 @@ canvas{
 </div>
 
 <!-- ================= POPUP ================= -->
-
 <div class="popup" id="depositPopup">
 <div class="popup-box">
-
 <h3>Select Network</h3>
-
 <select id="networkSelect" onchange="updateWallet()">
 <option value="USDT-ERC20">USDT (ERC20)</option>
 <option value="USDT-TRC20">USDT (TRC20)</option>
@@ -182,25 +166,21 @@ canvas{
 
 <input type="number" id="depositAmount" placeholder="Enter amount">
 <button onclick="confirmDeposit()">Confirm Deposit</button>
-
 <div class="loading" id="depositLoading"></div>
-
 <button onclick="closeDeposit()">Close</button>
-
 </div>
 </div>
-
-<script src="script.js"></script>
 
 <script>
+// ================= INITIALIZE BALANCE =================
+let balance = parseFloat(localStorage.getItem("balance")) || 500;
+let balanceEl = document.getElementById("balance");
+let historyEl = document.getElementById("history");
+balanceEl.innerText = "$" + balance.toFixed(2);
+window.tradingRunning = true;
+window.tradingHold = false;
 
-/* ================= BALANCE INIT ================= */
-
-document.getElementById("balance").innerText =
- "$" + (parseFloat(localStorage.getItem("balance")) || 500).toFixed(2);
-
-/* ================= WALLET ADDRESSES ================= */
-
+// ================= WALLET =================
 let wallets = {
  "USDT-ERC20":"0xA7f9C12D4E5F678901234567890ABCDEF1234567",
  "USDT-TRC20":"TXYz123456789ABCDEFGHJKLMNPQRST",
@@ -209,83 +189,71 @@ let wallets = {
  "BNB":"bnb1grpf0955h0ykzq3ar5nmum7y6gdfl6lxfn46h2"
 };
 
-function openDeposit(){
- document.getElementById("depositPopup").style.display="flex";
- updateWallet();
-}
-
-function closeDeposit(){
- document.getElementById("depositPopup").style.display="none";
- document.getElementById("depositLoading").innerText="";
-}
-
-function updateWallet(){
- let net=document.getElementById("networkSelect").value;
- document.getElementById("walletAddress").innerText=wallets[net];
-}
-
-function copyWallet(){
- let text=document.getElementById("walletAddress").innerText;
- navigator.clipboard.writeText(text);
- alert("Wallet Address Copied!");
-}
+function openDeposit(){ document.getElementById("depositPopup").style.display="flex"; updateWallet(); }
+function closeDeposit(){ document.getElementById("depositPopup").style.display="none"; document.getElementById("depositLoading").innerText=""; }
+function updateWallet(){ document.getElementById("walletAddress").innerText = wallets[document.getElementById("networkSelect").value]; }
+function copyWallet(){ navigator.clipboard.writeText(document.getElementById("walletAddress").innerText); alert("Wallet Address Copied!"); }
 
 function confirmDeposit(){
  let amount=parseFloat(document.getElementById("depositAmount").value);
- if(!amount||amount<=0)return;
-
+ if(!amount||amount<=0) return;
  document.getElementById("depositLoading").innerText="Confirming deposit...";
-
  setTimeout(()=>{
-   let bal=parseFloat(localStorage.getItem("balance"))||500;
-   bal+=amount;
-   localStorage.setItem("balance",bal);
+   balance += amount;
+   localStorage.setItem("balance", balance);
    saveHistory("Deposit +"+amount);
    document.getElementById("depositLoading").innerText="Deposit Successful!";
-   setTimeout(()=>location.reload(),1500);
- },60000);
+   updateBalanceEl();
+   setTimeout(()=>document.getElementById("depositPopup").style.display="none",1500);
+ },5000); // demo 5s
 }
-
-/* ================= WITHDRAW ================= */
 
 function unlockWithdrawal(){
- let amount=parseFloat(withdrawAmount.value);
- let bal=parseFloat(localStorage.getItem("balance"))||500;
-
- if(amount<1||bal-amount<500){
-   withdrawMsg.innerText="Cannot withdraw below $500 base capital.";
+ let amount=parseFloat(document.getElementById("withdrawAmount").value);
+ if(amount<1 || balance-amount<500){
+   document.getElementById("withdrawMsg").innerText="Cannot withdraw below $500 base capital.";
    return;
  }
-
- withdrawMsg.innerText="Unlocking withdrawal...";
-
+ document.getElementById("withdrawMsg").innerText="Unlocking withdrawal...";
  setTimeout(()=>{
-   bal-=amount;
-   localStorage.setItem("balance",bal);
+   balance -= amount;
+   localStorage.setItem("balance", balance);
    saveHistory("Withdrawal -"+amount);
-   withdrawMsg.innerText="Withdrawal Successful!";
-   setTimeout(()=>location.reload(),1500);
- },60000);
+   document.getElementById("withdrawMsg").innerText="Withdrawal Successful!";
+   updateBalanceEl();
+ },5000);
 }
 
-/* ================= HISTORY ================= */
-
+// ================= HISTORY =================
 function saveHistory(text){
- let list=JSON.parse(localStorage.getItem("history"))||[];
+ let list = JSON.parse(localStorage.getItem("history")) || [];
  list.push(text+" | "+new Date().toLocaleTimeString());
- localStorage.setItem("history",JSON.stringify(list));
+ localStorage.setItem("history", JSON.stringify(list));
+ loadHistory();
 }
-
 function loadHistory(){
- let list=JSON.parse(localStorage.getItem("history"))||[];
- list.forEach(item=>{
-   history.innerHTML+=`<li>${item}</li>`;
- });
+ historyEl.innerHTML="";
+ let list = JSON.parse(localStorage.getItem("history")) || [];
+ list.forEach(item => historyEl.innerHTML += `<li>${item}</li>`);
 }
 loadHistory();
 
-/* ================= ADVANCED MARKET ================= */
+// ================= LIVE BALANCE =================
+function updateBalanceEl(){ balanceEl.innerText="$"+balance.toFixed(2); }
 
+function liveBalanceTick(){
+ if(!window.tradingRunning || window.tradingHold) return;
+ let move = (Math.random()*2) * balance * 0.002;
+ if(Math.random()<0.25) move*=-1;
+ balance += move;
+ localStorage.setItem("balance", balance);
+ balanceEl.classList.remove("balance-up","balance-down");
+ balanceEl.classList.add(move>=0?"balance-up":"balance-down");
+ updateBalanceEl();
+}
+setInterval(liveBalanceTick,1000);
+
+// ================= MARKET CHART + SIGNAL =================
 const canvas=document.getElementById("chart");
 const ctx=canvas.getContext("2d");
 canvas.width=canvas.offsetWidth;
@@ -295,84 +263,65 @@ let candles=[];
 let maxCandles=40;
 let basePrice=50000;
 let marketMode="Normal";
-
-let pairVolatility={
-"BTC/USDT":120,"ETH/USDT":80,"SOL/USDT":60,
-"ADA/USDT":40,"XRP/USDT":35,"DOGE/USDT":30,
-"DOT/USDT":45,"LTC/USDT":55,"AVAX/USDT":70,"TRX/USDT":25
-};
-
+let pairVolatility={"BTC/USDT":120,"ETH/USDT":80,"SOL/USDT":60,"ADA/USDT":40,"XRP/USDT":35,"DOGE/USDT":30,"DOT/USDT":45,"LTC/USDT":55,"AVAX/USDT":70,"TRX/USDT":25};
 let modeMultiplier={"Calm":0.5,"Normal":1,"Volatile":2};
 
 function toggleMarketMode(){
- if(marketMode==="Calm")marketMode="Normal";
- else if(marketMode==="Normal")marketMode="Volatile";
- else marketMode="Calm";
+ marketMode = marketMode==="Calm"?"Normal":marketMode==="Normal"?"Volatile":"Calm";
 }
 
 function generateCandle(){
  let pair=document.getElementById("pair").value;
- let vol=pairVolatility[pair]*modeMultiplier[marketMode];
-
- let open=basePrice;
- let close=open+(Math.random()-0.5)*vol;
- let high=Math.max(open,close)+Math.random()*vol/2;
- let low=Math.min(open,close)-Math.random()*vol/2;
-
- basePrice=close;
-
+ let vol = pairVolatility[pair]*modeMultiplier[marketMode];
+ let open = basePrice;
+ let close = open + (Math.random()-0.5)*vol;
+ let high = Math.max(open,close) + Math.random()*vol/2;
+ let low = Math.min(open,close) - Math.random()*vol/2;
+ basePrice = close;
  candles.push({open,close,high,low});
- if(candles.length>maxCandles)candles.shift();
+ if(candles.length>maxCandles) candles.shift();
 }
 
 function drawChart(){
  ctx.clearRect(0,0,canvas.width,canvas.height);
- let max=Math.max(...candles.map(c=>c.high));
- let min=Math.min(...candles.map(c=>c.low));
- let w=canvas.width/maxCandles;
-
+ let max = Math.max(...candles.map(c=>c.high));
+ let min = Math.min(...candles.map(c=>c.low));
+ let w = canvas.width/maxCandles;
  candles.forEach((c,i)=>{
-  let x=i*w+w/4;
-  let scale=canvas.height/(max-min||1);
-  let openY=canvas.height-(c.open-min)*scale;
-  let closeY=canvas.height-(c.close-min)*scale;
-  let highY=canvas.height-(c.high-min)*scale;
-  let lowY=canvas.height-(c.low-min)*scale;
-
-  ctx.strokeStyle=c.close>c.open?"#00c087":"#f6465d";
-  ctx.fillStyle=ctx.strokeStyle;
-
-  ctx.beginPath();
-  ctx.moveTo(x+w/4,highY);
-  ctx.lineTo(x+w/4,lowY);
-  ctx.stroke();
-
-  ctx.fillRect(x,Math.min(openY,closeY),w/2,Math.abs(openY-closeY)||2);
+   let x=i*w+w/4;
+   let scale = canvas.height/(max-min||1);
+   let openY = canvas.height-(c.open-min)*scale;
+   let closeY = canvas.height-(c.close-min)*scale;
+   let highY = canvas.height-(c.high-min)*scale;
+   let lowY = canvas.height-(c.low-min)*scale;
+   ctx.strokeStyle = c.close>c.open?"#00c087":"#f6465d";
+   ctx.fillStyle = ctx.strokeStyle;
+   ctx.beginPath();
+   ctx.moveTo(x+w/4,highY);
+   ctx.lineTo(x+w/4,lowY);
+   ctx.stroke();
+   ctx.fillRect(x,Math.min(openY,closeY),w/2,Math.abs(openY-closeY)||2);
  });
 }
 
 function updateSignal(){
- if(candles.length<2)return;
-
+ if(candles.length<2) return;
  let last=candles[candles.length-1];
  let prev=candles[candles.length-2];
-
  let change=last.close-prev.close;
  let confidence=Math.floor(Math.random()*20)+75;
-
- signalPrice.innerText=Math.round(last.close);
-
+ document.getElementById("signalPrice").innerText=Math.round(last.close);
+ let chgEl=document.getElementById("signalChange");
  if(change>0){
-   signalText.innerText="Signal: BUY";
-   signalChange.innerText="+"+change.toFixed(2);
-   signalChange.className="chg up";
+   document.getElementById("signalText").innerText="Signal: BUY";
+   chgEl.innerText="+"+change.toFixed(2);
+   chgEl.className="chg up";
  }else{
-   signalText.innerText="Signal: SELL";
-   signalChange.innerText=change.toFixed(2);
-   signalChange.className="chg down";
+   document.getElementById("signalText").innerText="Signal: SELL";
+   chgEl.innerText=change.toFixed(2);
+   chgEl.className="chg down";
  }
-
- signalDesc.innerText="Confidence: "+confidence+"% | Mode: "+marketMode;
+ document.getElementById("signalDesc").innerText="Confidence: "+confidence+"% | Mode: "+marketMode;
 }
 
 function animate(){
@@ -381,60 +330,12 @@ function animate(){
  updateSignal();
  setTimeout(animate,1200);
 }
-/* ================= REAL LIVE BALANCE ENGINE ================= */
-
-let tradingRunning=true;
-let tradingHold=false;
-
-// connect your buttons automatically if they exist
-function startStopTrade(){
- tradingRunning=!tradingRunning;
-}
-
-function holdContinue(){
- tradingHold=!tradingHold;
-}
-
-function liveBalanceTick(){
-
- if(!tradingRunning || tradingHold) return;
-
- let bal=parseFloat(localStorage.getItem("balance"))||500;
-
-// realistic movement
-// mostly positive, sometimes negative
-let move=(Math.random()*2);
-
-if(Math.random()<0.25){   // 25% chance loss
-  move*=-1;
-}
-
-// scale movement to account size
-move*=bal*0.002;  // 0.2%
-
-let newBal=bal+move;
-
-localStorage.setItem("balance",newBal);
-
-let el=document.getElementById("balance");
-
-if(newBal>bal){
- el.classList.remove("balance-down");
- el.classList.add("balance-up");
-}else{
- el.classList.remove("balance-up");
- el.classList.add("balance-down");
-}
-
-el.innerText="$"+newBal.toFixed(2);
-
-}
-
-// tick every second like real exchange
-setInterval(liveBalanceTick,1000);
 animate();
 
-</script>
+// ================= BUTTONS =================
+function startStopTrade(){ window.tradingRunning=!window.tradingRunning; }
+function holdContinue(){ window.tradingHold=!window.tradingHold; }
 
+</script>
 </body>
 </html>
